@@ -1,0 +1,7 @@
+# Binary / compiled files
+*.exe
+*.ico
+
+# Windows
+Thumbs.db
+Desktop.ini
