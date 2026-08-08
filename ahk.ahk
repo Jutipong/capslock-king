@@ -57,7 +57,7 @@ Capslock & t::F12                ; F12
 ; ===============================================
 ; APPLICATION CONTROLS
 ; ===============================================
-Capslock & q::!{F4}              ; Close Application (Alt+F4)
+Capslock & q::Send !{F4}         ; Close Application (Alt+F4)
 
 ; ===============================================
 ; WINDOW MANAGEMENT
