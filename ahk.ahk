@@ -7,6 +7,14 @@
 ;              for Vim-like navigation and shortcuts
 ; ===============================================
 
+; ===============================================
+; STANDARD SETUP
+; ===============================================
+#NoEnv                         ; Ignore environment variables (v1 best practice)
+#SingleInstance, Force         ; Replace running instance when launched again
+#Warn                          ; Warn on suspect syntax / typos
+SetWorkingDir %A_ScriptDir%    ; Work relative to this script's folder
+
 SendMode, Input
 #MaxHotkeysPerInterval 200
 
