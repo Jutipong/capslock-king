@@ -1,140 +1,185 @@
-# 🔥 CapsLock King
+# 🔥 CapsLock King v2 (C# / WinUI-style WPF)
 
-> เปลี่ยนปุ่ม CapsLock ให้เป็นปุ่มวิเศษ (Modifier Key) สำหรับ Vim-style navigation และช็อตคัทสุดคุ้มบน Windows
+> เปลี่ยนปุ่ม CapsLock ให้เป็น **Super Key** สำหรับ Vim-style navigation บน Windows
+> — หน้าจอตั้งค่าสวย ๆ (Fluent theme), mapping เก็บใน `config.json`, ไม่ต้องใช้ AutoHotkey
 
-สคริปต์ [AutoHotkey](https://www.autohotkey.com/) ที่เปลี่ยน CapsLock ที่แทบไม่ได้ใช้ ให้กลายเป็น **Super Key** ควบคุมทุกอย่างบนคีย์บอร์ดแบบเดียวกับ Vim — ไม่ต้องง้อเมาส์ ไม่ต้องงอข้อมือ
+- **C# / .NET 10 + WPF (WPF-UI Fluent theme)**
+- **Self-contained** — ไม่ต้องติดตั้ง .NET runtime (ผู้ใช้เอาไปแพ็กเป็น installer ได้)
+- **Keyboard hook ระดับ low-level** (`WH_KEYBOARD_LL`) เหมือนเดิม แต่เป็นโค้ดของเราเอง
+- **ไม่พึ่ง layout** — จับด้วย scancode (ตำแหน่งปุ่ม) ใช้กับคีย์บอร์ดไทย/อังกฤษได้เหมือนกัน
+
+```
+publish\
+├─ CapsLockKing.exe   ← ดับเบิลคลิกแล้วใช้ได้ (มี tray icon)
+├─ config.json        ← mapping ทั้งหมด (แก้มือหรือแก้ผ่าน GUI ก็ได้)
+└─ ... DLL ของ .NET (self-contained)
+```
 
 ---
 
 ## ✨ คุณสมบัติ
 
-### 🧭 Navigation แบบ Vim
+- **CapsLock เดี่ยว** → `Esc`
+- **Vim navigation** — `h/j/k/l` = ซ้าย/ล่าง/บน/ขวา (กดค้าง = auto-repeat)
+- **Clipboard / ไฟล์ / Function keys** — ครบเหมือนเวอร์ชันเดิม
+- **หน้าตั้งค่า (Settings…)** — เพิ่ม/ลบ/แก้ mapping, **กดปุ่มจริงเพื่อจับคีย์**, ตรวจ config ก่อนบันทึก
+- **Reload ได้ทันที** — ไม่ต้องปิดโปรแกรม (tray → Reload config)
+- **ภาษาไทยในหน้าจอ** — ใช้ฟอนต์ระบบ + font fallback ของ WPF/DirectWrite
+
+## 🎹 Mapping เริ่มต้น
+
 | คีย์ | ฟังก์ชัน |
 |------|----------|
 | `CapsLock` (กดเดี่ยว) | `Esc` |
-| `CapsLock + h` | ← ซ้าย |
-| `CapsLock + j` | ↓ ล่าง |
-| `CapsLock + k` | ↑ บน |
-| `CapsLock + l` | → ขวา |
-
-### 📋 Clipboard
-| คีย์ | ฟังก์ชัน |
-|------|----------|
-| `CapsLock + c` | Copy (`Ctrl+C`) |
-| `CapsLock + v` | Paste (`Ctrl+V`) |
-| `CapsLock + x` | Cut (`Ctrl+X`) |
-| `CapsLock + z` | Undo (`Ctrl+Z`) |
-| `CapsLock + y` | Redo (`Ctrl+Y`) |
-
-### 📁 ไฟล์
-| คีย์ | ฟังก์ชัน |
-|------|----------|
-| `CapsLock + s` | Save (`Ctrl+S`) |
-| `CapsLock + a` | Select All (`Ctrl+A`) |
-| `CapsLock + f` | Find (`Ctrl+F`) |
-| `CapsLock + w` | Close Tab (`Ctrl+W`) |
-
-### 🗑️ การลบ
-| คีย์ | ฟังก์ชัน |
-|------|----------|
-| `CapsLock + .` | Delete (ลบตัวอักษรข้างหน้า) |
-| `CapsLock + ,` | Backspace (ลบตัวอักษรข้างหลัง) |
-
-### ⌨️ Function Keys (เหมาะกับ Developer)
-| คีย์ | ฟังก์ชัน |
-|------|----------|
-| `CapsLock + r` | Refresh (`F5`) |
-| `CapsLock + g` | Debug (`F9`) |
-| `CapsLock + d` | Step Over (`F10`) |
-| `CapsLock + e` | Step Into (`F11`) |
-| `CapsLock + t` | `F12` |
-
-### 🪟 การจัดการ Window
-| คีย์ | ฟังก์ชัน |
-|------|----------|
-| `CapsLock + q` | Close App (`Alt+F4`) |
-| `CapsLock + u` | สลับไป Virtual Desktop ซ้าย |
-| `CapsLock + i` | สลับไป Virtual Desktop ขวา |
+| `CapsLock + h/j/k/l` | ← / ↓ / ↑ / → |
+| `CapsLock + c/v/x/z/y` | Copy / Paste / Cut / Undo / Redo |
+| `CapsLock + s/a/f/w` | Save / Select All / Find / Close Tab |
+| `CapsLock + .` / `,` | Delete / Backspace |
+| `CapsLock + r/g/d/e/t` | F5 / F9 / F10 / F11 / F12 |
+| `CapsLock + q` | ปิดแอป (`Alt+F4`) |
+| `CapsLock + u` / `i` | สลับ Virtual Desktop ซ้าย / ขวา |
 
 ### 🔀 ทริค: กดคู่กับ Shift / Ctrl / Alt
 
-ทุก hotkey ทำงานผ่านกลไก remap ของ AutoHotkey ที่ปล่อยให้ modifier ที่กดค้างอยู่ส่งผ่านไปด้วย — ลองกดค้างผสมได้เลย:
+Modifier ที่กดค้างอยู่จะถูกส่งผ่านไปด้วยอัตโนมัติ:
 
 | ทริค | ผลลัพธ์ |
 |------|----------|
-| `CapsLock + Shift + h/j/k/l` | เลือกข้อความทีละตัว (เหมือนกด `Shift` + ลูกศร) |
-| `CapsLock + Ctrl + h/l` | กระโดดทีละคำ (เหมือนกด `Ctrl` + ลูกศร) |
+| `CapsLock + Shift + h/j/k/l` | เลือกข้อความ (เหมือน `Shift` + ลูกศร) |
+| `CapsLock + Ctrl + h/l` | กระโดดทีละคำ |
 | `CapsLock + Ctrl + Shift + l` | เลือกข้อความทีละคำ |
-| `CapsLock + Alt + h/l` | ย้อนกลับ / ไปข้างหน้า (เหมือน `Alt` + ←/→) |
+| `CapsLock + Alt + h/l` | ย้อนกลับ / ไปข้างหน้า |
 
 ---
 
-## 🚀 วิธีติดตั้ง
+## 🚀 วิธีใช้
 
-1. ดาวน์โหลดและติดตั้ง [AutoHotkey](https://www.autohotkey.com/) (v1.x)
-2. ดับเบิลคลิกไฟล์ `ahk.ahk` เพื่อรัน
-3. เท่านี้ก็ใช้งานได้เลย! 🎉
+1. รัน `CapsLockKing.exe` → ไอคอนมงกุฎ 👑 ขึ้นใน system tray
+2. คลิกขวาที่ tray icon:
 
-> 💡 หรือใช้ไฟล์ `CapsLockKing.exe` ที่ compile ไว้แล้ว โดยไม่ต้องติดตั้ง AutoHotkey
+| เมนู | ทำอะไร |
+|------|--------|
+| **Settings…** | เปิดหน้าตั้งค่า (แก้ mapping ด้วย GUI) |
+| **Reload config** | อ่าน `config.json` ใหม่ทันที |
+| **Open config.json** | เปิดไฟล์ด้วย editor ที่ตั้งไว้ |
+| **Open config folder** | เปิดโฟลเดอร์ที่มี exe/config |
+| **Exit** | ปิดโปรแกรม |
+
+> รัน exe ซ้ำขณะโปรแกรมทำงานอยู่ = เปิดหน้าตั้งค่าของตัวที่รันอยู่ (ไม่รันซ้อน)
+
+### ⚙️ เปิดพร้อม Windows
+
+1. `Win + R` → `shell:startup` → Enter
+2. สร้าง shortcut ของ `CapsLockKing.exe` วางในโฟลเดอร์ Startup
+
+> ถ้าเคยตั้ง Startup ไว้กับเวอร์ชัน AutoHotkey ให้ลบ shortcut เก่าก่อน
 
 ---
 
-## ⚙️ ตั้งค่ารันอัตโนมัติตอนเปิดเครื่อง (Startup)
+## 🖥️ หน้าตั้งค่า (Settings)
 
-1. กด `Win + R` พิมพ์ `shell:startup` แล้วกด Enter
-2. สร้าง Shortcut จากไฟล์ `CapsLockKing.exe` (หรือ `ahk.ahk`)
-3. วาง Shortcut ลงในโฟลเดอร์ Startup
+- **การ์ด "ปุ่ม CapsLock"** — กำหนด action เมื่อแตะ CapsLock เดี่ยว + `tapTimeoutMs`
+- **การ์ด "คีย์ลัด"** — ตาราง mapping: กดปุ่มซ้ายเพื่อจับคีย์จริง, พิมพ์ action เองได้, ปุ่ม `จับ combo` สำหรับชุดคีย์
+- ปุ่ม **＋ เพิ่ม mapping** — เพิ่มแถวแล้วเข้าสู่โหมดจับคีย์ทันที (กดปุ่ม → กด combo ต่อ)
+- **บันทึก & ใช้** — validate ก่อน, สำรองของเดิมเป็น `config.json.bak`, เขียนแบบ atomic, reload ทันที
+- **ค่าเริ่มต้น** — เติม mapping มาตรฐานกลับมา (ยังไม่เขียนไฟล์จนกว่าจะกดบันทึก)
 
-เรียบร้อย! ทุกครั้งที่เปิดเครื่อง Windows สคริปต์จะรันอัตโนมัติ
-
-> ⚠️ ถ้าเคยตั้ง Startup ไว้กับเวอร์ชันเก่า (ชื่อไฟล์ `ahk.exe`) ต้องลบ Shortcut เก่าและสร้างใหม่ เพราะไฟล์ถูกเปลี่ยนชื่อเป็น `CapsLockKing.exe` แล้ว
+หน้าตั้งค่าเป็นเพียง editor ของ `config.json` — ไม่มีค่าที่ซ่อนอยู่ที่อื่น
 
 ---
 
-## 🛠️ ปรับแต่งเพิ่มเติม
+## 📝 รูปแบบ `config.json`
 
-เปิดไฟล์ `ahk.ahk` ด้วย Notepad หรือ editor ใดก็ได้ แล้วเพิ่ม/แก้บรรทัดตามรูปแบบนี้:
-
-```autohotkey
-Capslock & <คีย์>::<คำสั่ง>   ; คำอธิบาย
+```json
+{
+  "version": 1,
+  "tapTimeoutMs": 0,
+  "remap": {
+    "caps_lock": {
+      "tap": "escape",
+      "hold": {
+        "h": "left",
+        "c": "ctrl+c",
+        "u": "win+ctrl+left"
+      }
+    }
+  }
+}
 ```
 
-ตัวอย่างเพิ่มเติม:
-```autohotkey
-Capslock & n::^n              ; เปิด New Window (Ctrl+N)
-Capslock & m::Send {Media_Play_Pause}  ; เล่น/หยุดเพลง
+| ฟิลด์ | ความหมาย |
+|-------|----------|
+| `version` | ต้องเป็น `1` |
+| `tapTimeoutMs` | `0` = กด CapsLock เดี่ยวแล้วได้ `tap` ทุกครั้ง / เช่น `250` = ต้องปล่อยภายใน 250 ms |
+| `remap.caps_lock.tap` | สิ่งที่ส่งเมื่อแตะ CapsLock เดี่ยว (ไม่ใส่ = ไม่ส่งอะไร) |
+| `remap.caps_lock.hold.<ปุ่ม>` | สิ่งที่ส่งเมื่อ `CapsLock + ปุ่ม` |
+
+**รูปแบบ action**: `<ปุ่ม>` หรือ `ctrl+shift+left` (modifier: `ctrl`, `shift`, `alt`, `win`)
+
+**ชื่อปุ่ม**: `a`–`z`, `0`–`9`, `escape`, `tab`, `backspace`, `enter`, `space`, `caps_lock`,
+`left/right/up/down`, `home/end/page_up/page_down`, `insert/delete`, `f1`–`f12`,
+`- = [ ] ; ' \` \ , . /`, `print_screen`, `scroll_lock`
+(+ ชื่อพ้อง `esc`, `return`, `control`, `windows`, `pgup`, `pgdn`, `del`, `ins`)
+
+> แก้ผิดแล้ว Reload: โปรแกรมจะ **ไม่ตาย** — ยังใช้ mapping เดิม พร้อมบอกบรรทัด/ชื่อคีย์ที่ผิด
+
+---
+
+## 🧪 Debug / log
+
+```powershell
+.\CapsLockKing.exe --debug                # เขียน log ที่ capslockking.log ข้าง exe
+.\CapsLockKing.exe --config D:\my.json    # ใช้ config คนละไฟล์
+.\CapsLockKing.exe --settings             # เปิดหน้าตั้งค่าทันที
 ```
 
 ---
 
-## 🔧 Troubleshooting / ข้อควรรู้
+## 🩺 Troubleshooting
 
-**ปุ่มไม่ทำงานในบางแอป**
-แอปนั้นอาจรันด้วยสิทธิ์ Administrator (เช่น Task Manager หรือ terminal ที่เปิดแบบ admin) — Windows จะกัน hotkey ไว้ ต้องรันสคริปต์แบบ Administrator ด้วย (คลิกขวาที่ `CapsLockKing.exe` → **Run as administrator**)
+**ปุ่มไม่ทำงานในบางแอป** — แอปที่รันแบบ Administrator จะไม่รับคีย์จากโปรแกรมระดับ user
+(คลิกขวา → **Run as administrator**)
 
-**อยากปิด/หยุดสคริปต์**
-คลิกขวาที่ไอคอนมงกุฎ 👑 ใน system tray → **Exit**
+**เกมบางเกมไม่รับคีย์** — ข้อจำกัดของ Windows (raw input / anti-cheat) ไม่ใช่บั๊ก
+และโปรแกรมนี้ไม่รองรับ per-device remap (ต้องใช้ไดรเวอร์ระดับ kernel)
 
-**ไฟ LED ที่ปุ่ม CapsLock ไม่ติดอีกแล้ว**
-เป็นเรื่องตั้งใจ — สคริปต์ปิดการทำงานเดิมของ CapsLock (`SetCapsLockState, AlwaysOff`) ถ้าต้องการพิมพ์ตัวพิมพ์ใหญ่ให้ใช้ `Shift`
+**LED CapsLock ไม่ติด** — ตั้งใจ: ปุ่ม CapsLock ถูกกลืนทั้งหมด ต้องการพิมพ์ใหญ่ใช้ `Shift`
 
-**แก้ `ahk.ahk` แล้วพฤติกรรมไม่เปลี่ยน**
-ไฟล์ `CapsLockKing.exe` คือสำเนาที่ compile ไว้ ณ ตอนนั้น — ต้อง compile ใหม่ทุกครั้งหลังแก้สคริปต์:
+---
 
-```bash
-& "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in ahk.ahk /out CapsLockKing.exe /icon CapsLockKing.ico
+## 🔨 Build & Test
+
+ต้องมี .NET 10 SDK (ไม่ต้องมี Visual Studio)
+
+```powershell
+dotnet test                                        # unit test (43 เคส)
+dotnet build src\CapsLockKing -c Release           # build ปกติ
+powershell -ExecutionPolicy Bypass -File scripts\publish.ps1   # เตรียมไฟล์ให้ installer
 ```
 
-> 💡 ไฟล์ icon สร้างใหม่ได้ด้วย `powershell -ExecutionPolicy Bypass -File tools\generate-icon.ps1`
+- `scripts\publish.ps1` → `publish\` แบบ self-contained (~160 MB / 255 ไฟล์, ไม่ต้องลง runtime)
+- ใส่ `-SingleFile` ถ้าอยากได้ exe เดี่ยว (แตกไฟล์ตอนรันครั้งแรก, startup ช้าขึ้น)
+- ไอคอนมาจาก `CapsLockKing.ico` (สร้างใหม่ได้ด้วย `tools\generate-icon.ps1`)
+
+## 📁 โครงสร้างโปรเจค
+
+| ไฟล์ | คำอธิบาย |
+|------|----------|
+| `src/CapsLockKing/App.xaml(.cs)` | entry point, single instance, tray, เปิดหน้าตั้งค่า |
+| `src/CapsLockKing/Core/Keys.cs` | ตารางชื่อปุ่ม ↔ scancode/VK |
+| `src/CapsLockKing/Core/ConfigLoader.cs` | อ่าน/validate `config.json` + default ที่ฝังใน exe |
+| `src/CapsLockKing/Core/ConfigWriter.cs` | สร้าง JSON จากหน้าตั้งค่า (atomic save อยู่ที่ MainWindow) |
+| `src/CapsLockKing/Core/HookEngine.cs` | state machine tap/hold/passthrough (pure, มี unit test) |
+| `src/CapsLockKing/Core/KeyboardHook.cs` | `WH_KEYBOARD_LL` + โหมดจับคีย์ |
+| `src/CapsLockKing/Core/Sender.cs` | `SendInput` แบบ batch |
+| `src/CapsLockKing/Views/MainWindow.xaml(.cs)` | หน้าตั้งค่า (Fluent UI) |
+| `tests/CapsLockKing.Tests/` | xUnit tests |
+| `legacy/` | เวอร์ชัน AutoHotkey เดิม (เก็บไว้เป็นทางถอย) |
 
 ---
 
 ## 📌 หมายเหตุ
 
-- สคริปต์ปิดการทำงานเดิมของ CapsLock (`SetCapsLockState, AlwaysOff`) — ถ้าต้องการพิมพ์ตัวพิมพ์ใหญ่ให้ใช้ `Shift` แทน
-- รองรับ Windows 10/11 (Virtual Desktop ต้องใช้ Windows 10 ขึ้นไป)
+- รองรับ Windows 10/11 (Virtual Desktop ต้อง Windows 10 ขึ้นไป)
+- ถ้าจะทำ installer: เอาโฟลเดอร์ `publish\` ไปแพ็ก (Inno Setup/WiX) — อย่าลืม `config.json`
 - ถ้าเจอบั๊กหรืออยากเพิ่มฟีเจอร์ ส่ง Pull Request หรือเปิด Issue ได้เลย 👑
-
----
-
-**Made with ❤️ + ☕ + CapsLock**

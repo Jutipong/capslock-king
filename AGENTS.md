@@ -1,69 +1,96 @@
 # AGENTS.md
 
-## โปรเจค: CapsLock King 🔥
+## โปรเจค: CapsLock King 🔥 (v2 — C# / WPF)
 
-AutoHotkey (v1) script ที่เปลี่ยนปุ่ม CapsLock ให้เป็น **Super Key** สำหรับ
-Vim-style navigation และ keyboard shortcuts บน Windows (Windows 10/11)
+โปรแกรม Windows ที่เปลี่ยน **CapsLock** ให้เป็น **Super Key** (Vim-style navigation)
+เขียนด้วย **C# (.NET 10) + WPF + WPF-UI (Fluent theme)**
+แพ็กแบบ **self-contained** (ผู้ใช้เอา `publish/` ไปทำ installer เอง) — ไม่ใช้ AutoHotkey แล้ว
 
 ## โครงสร้างไฟล์
 
-| ไฟล์ | คำอธิบาย | commit ขึ้น git? |
-|------|----------|------------------|
-| `ahk.ahk` | สคริปต์หลัก (AutoHotkey v1) — จุดเดียวที่แก้ code | ✅ |
-| `README.md` | เอกสารโปรเจค + ตาราง keybindings ครบทุก mapping | ✅ |
-| `LICENSE` | สัญญาอนุญาต MIT (js.dev) | ✅ |
-| `.gitignore` | กันไฟล์ขยะของ Windows (Thumbs.db ฯลฯ) | ✅ |
-| `AGENTS.md` | คู่มือสำหรับ AI agent (ไฟล์นี้) | ✅ |
-| `CapsLockKing.exe` | เวอร์ชัน compiled (ฝังสคริปต์ + icon) — **ต้อง rebuild ทุกครั้งที่แก้ `ahk.ahk`** | ✅ |
-| `CapsLockKing.ico` | ไอคอนของ exe (สร้างจาก `tools/generate-icon.ps1`) | ✅ |
-| `tools/generate-icon.ps1` | สคริปต์ PowerShell สร้างไอคอน (ไม่พึ่งไฟล์ภาพภายนอก) | ✅ |
+| ไฟล์ | คำอธิบาย | commit? |
+|------|----------|---------|
+| `CapsLockKing.sln` | solution (app + tests) | ✅ |
+| `src/CapsLockKing/` | แอป WPF | ✅ |
+| `src/CapsLockKing/Core/Keys.cs` | ตารางชื่อปุ่ม ↔ scancode/VK | ✅ |
+| `src/CapsLockKing/Core/ConfigLoader.cs` | อ่าน/validate config + default (ฝังจาก `config.json`) | ✅ |
+| `src/CapsLockKing/Core/ConfigWriter.cs` | สร้าง JSON จากหน้าตั้งค่า | ✅ |
+| `src/CapsLockKing/Core/HookEngine.cs` | state machine tap/hold (pure, unit test) | ✅ |
+| `src/CapsLockKing/Core/KeyboardHook.cs` | `WH_KEYBOARD_LL` + capture mode | ✅ |
+| `src/CapsLockKing/Core/Sender.cs` | `SendInput` | ✅ |
+| `src/CapsLockKing/Core/AppHost.cs` | config/hook/tray/เปิดหน้าต่าง | ✅ |
+| `src/CapsLockKing/Core/TrayIcon.cs` | tray + context menu (WinForms NotifyIcon) | ✅ |
+| `src/CapsLockKing/Core/Log.cs` | log ไฟล์ (`--debug`) | ✅ |
+| `src/CapsLockKing/Views/MainWindow.xaml(.cs)` | หน้าตั้งค่า | ✅ |
+| `tests/CapsLockKing.Tests/` | xUnit (ต้องผ่านทั้งหมดก่อน commit) | ✅ |
+| `config.json` | mapping เริ่มต้น = source of truth | ✅ |
+| `CapsLockKing.ico` | ไอคอน (ใช้เป็น ApplicationIcon) | ✅ |
+| `scripts/publish.ps1` | publish self-contained ให้ installer | ✅ |
+| `tools/generate-icon.ps1` | สร้างไอคอนจากโค้ด | ✅ |
+| `legacy/` | เวอร์ชัน AutoHotkey เดิม — **ห้ามแก้/ห้ามลบ** | ✅ |
+| `publish/`, `bin/`, `obj/` | ของที่ build ออกมา — gitignore | ❌ |
 
-## ข้อมูลสำคัญ (ต้องรู้ก่อนแก้)
+## สถาปัตยกรรม (ต้องรู้ก่อนแก้)
 
-- ใช้ **AutoHotkey v1 syntax** (`SendMode, Input`, `Capslock & h::`) — **ห้ามใช้ v2 syntax** (`SendInput`, `Hotkey` object ฯลฯ)
-- บรรทัด `SetCapsLockState, AlwaysOff` จำเป็น — ห้ามลบ ไม่งั้น CapsLock กลับมาทำงานเดิม
-- `SendMode, Input` ต้องอยู่ใน auto-execute section ก่อน hotkey ทุกตัว (directive อย่าง `#NoEnv` / `#SingleInstance` วางเหนือได้)
-- `#SingleInstance, Force` — กันรันซ้ำแล้ว hotkey ซ้อนกัน 2 ชั้น
-- `#MaxHotkeysPerInterval 200` กันไม่ให้ Windows ตีว่า hotkey spam
-- mapping แบบ `Capslock & h::Left` คือ remap ซึ่ง AutoHotkey ใช้ `{Blind}` ภายใน — modifier ที่ผู้ใช้กดค้าง (Shift/Ctrl/Alt) จะส่งผ่านไปด้วย และปุ่ม auto-repeat ได้ตอนกดค้าง (ดูทริคใน README)
+- **UI thread เดียว** (WPF): keyboard hook ติดตั้งบน UI thread (มี message pump อยู่แล้ว) และ tray (WinForms `NotifyIcon`) ก็สร้างบน thread เดียวกัน
+- **ห้าม block UI thread** งานหนักให้ย้ายไป `Task.Run`
+- `HookEngine` ต้องเป็น **pure logic** — รับ `(vk, scan, down, nowMs)` คืน `FilterResult` เพื่อเขียน unit testได้ อย่าใส่ P/Invoke หรือ WPF ลงไป
+- `KeyboardHook` กรอง `LLKHF_INJECTED` ทิ้งเสมอ (กัน `SendInput` ของตัวเองวนกลับเข้า hook)
+- **โหมดจับคีย์ (capture)**: `KeyboardHook.SetCapture(true)` → hook ปล่อยคีย์ดิบ แต่ **กลืน CapsLock** ไว้ (กัน LED/toggle เพี้ยน) และเก็บ scancode ลง slot ให้ UI อ่านผ่าน `TakeCaptured()`
+- Modifier ที่ผู้ใช้กดค้าง **ไม่ต้องส่งซ้ำ** — ระบบยังเห็นว่ากดค้างอยู่แล้ว (นี่คือเหตุผลที่ passthrough ทำงานได้เหมือน `{Blind}` ของ AHK)
+- Single instance: named `Mutex` + named `EventWaitHandle` (ตัวที่สอง `Set()` → ตัวแรกเปิดหน้าตั้งค่า)
+- config save: validate → copy `.bak` → เขียน `.tmp` → `File.Move(overwrite)` → `AppHost.ReloadFromDisk`
+- UI: `App.xaml` มี theme (WPF-UI Dark) + style `CardStyle`/`SectionTitleStyle`/`HintStyle`; `DataTemplate` ของแถวอยู่ใน `MainWindow.xaml` (เพราะมี event handler)
 
 ## กฎการแก้ code
 
-1. Mapping ใหม่ต้องใช้รูปแบบ `Capslock & <คีย์>::<คำสั่ง>` เสมอ พร้อม comment กำกับ
-2. ไล่ลำดับ section ให้ตรงกับเดิม: Navigation → Clipboard → File → Delete → Function Keys → App Controls → Window Management
-3. ถ้าเพิ่ม/แก้ mapping ต้องอัปเดตตารางใน `README.md` พร้อมกันเสมอ
-4. ระวังคีย์ซ้ำ — ถ้าจะ map คีย์ที่ใช้แล้ว ต้องตัด mapping เดิมออก
-5. ทุกครั้งที่แก้ `ahk.ahk` ต้อง rebuild `CapsLockKing.exe` (Ahk2Exe) แล้ว commit ทั้ง 2 ไฟล์พร้อมกัน — คำสั่งอยู่ในหัวข้อ "คำสั่งที่ใช้บ่อย"
-6. ทดสอบโดยดับเบิลคลิก `ahk.ahk` หรือรัน `CapsLockKing.exe` (ต้องติดตั้ง AutoHotkey v1)
+1. `config.json` = source of truth เดียว — mapping ห้าม hardcode ในโค้ด (default ฝังมาจากไฟล์เดียวกันผ่าน `EmbeddedResource`)
+2. เพิ่ม/แก้ชื่อปุ่ม → แก้ `Core/Keys.cs` **ตารางเดียว**
+3. ฝั่ง input จับด้วย **scancode** (ห้ามเปลี่ยนไปใช้ VK — จะพังบนคีย์บอร์ดไทย)
+4. เปลี่ยนพฤติกรรม tap/hold → ต้องเพิ่ม/แก้ test ใน `tests/` และ `dotnet test` ต้องผ่านทั้งหมด
+5. ข้อความใน `config.json` และชื่อปุ่มต้องเป็น ASCII; ข้อความ UI/log เป็นไทยได้
+6. หลังแก้โค้ด: `dotnet test` → `dotnet build -c Release` → (`scripts/publish.ps1` ถ้าจะส่งมอบ)
+7. ห้ามแตะ `legacy/` (ยกเว้นผู้ใช้สั่งชัดเจน)
+8. อย่าเพิ่ม NuGet package ใหม่โดยไม่จำเป็น (ตอนนี้มีแค่ `WPF-UI`)
 
-## Mapping ปัจจุบัน (สรุป)
+## ข้อจำกัดที่ตั้งใจ (อย่าไป "แก้" โดยไม่ถาม)
 
-- `CapsLock` เดี่ยว → `Esc`
-- `h/j/k/l` → ซ้าย/ล่าง/บน/ขวา (Vim)
-- `c/v/x/z/y` → Copy/Paste/Cut/Undo/Redo
-- `s/a/f/w` → Save/Select All/Find/Close Tab
-- `.`/`,` → Delete/Backspace
-- `r/g/d/e/t` → F5/F9/F10/F11/F12
-- `q` → Alt+F4
-- `u/i` → สลับ Virtual Desktop ซ้าย/ขวา
-
-## งานที่ค้าง
-
-- [ ] อัปเดต shortcut ใน Startup folder ของเครื่องผู้ใช้ให้ชี้ `CapsLockKing.exe` (ของเดิมชี้ `ahk.exe` เวอร์ชันเก่า)
-- [ ] พิจารณา migrate จาก AutoHotkey v1 → v2 (v1 เลิก maintain แล้ว) — ยังไม่เริ่ม
+- ไม่ใช้ไดรเวอร์ → per-device remap / เกม anti-cheat ทำไม่ได้
+- ไม่มี installer ในโปรเจค (ผู้ใช้ทำเอง) — autostart ใช้ shortcut ใน `shell:startup`
+- รันระดับ user → แอป Administrator ต้อง Run as administrator เอง
+- `tapTimeoutMs: 0` = พฤติกรรมเดิมของ AHK (ได้ `Esc` ทุกครั้งที่แตะ)
+- WinUI 3 ถูกประเมินแล้วว่า **build ไม่ได้บนเครื่องนี้** (ไม่มี VS/Windows SDK → PRI task หาย) จึงใช้ WPF + WPF-UI แทน
 
 ## คำสั่งที่ใช้บ่อย
 
-```bash
-# ทดสอบรันสคริปต์ตรงๆ (ต้องมี AutoHotkey v1)
-AutoHotkey.exe ahk.ahk
+```powershell
+dotnet test                                    # unit test ทั้งหมด
+dotnet build src\CapsLockKing -c Release       # build
+dotnet run --project src\CapsLockKing -- --debug --settings
 
-# Rebuild exe หลังแก้ ahk.ahk (บังคับ — exe ถูก track ใน git)
-"C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe" /in ahk.ahk /out CapsLockKing.exe /icon CapsLockKing.ico
+# เตรียมไฟล์ให้ installer (self-contained)
+powershell -ExecutionPolicy Bypass -File scripts\publish.ps1
+# exe เดี่ยว (แตกตอนรัน, startup ช้า)
+powershell -ExecutionPolicy Bypass -File scripts\publish.ps1 -SingleFile
 
-# สร้างไอคอนใหม่ (ถ้าต้องการ)
-powershell -ExecutionPolicy Bypass -File tools\generate-icon.ps1
-
-# ดูสถานะ git
-git status
+# log
+Get-Content .\src\CapsLockKing\bin\Release\net10.0-windows\capslockking.log
 ```
+
+## Checklist ทดสอบก่อน commit (manual)
+
+- [ ] CapsLock เดี่ยว → `Esc`
+- [ ] `CapsLock + h/j/k/l` → ลูกศร (กดค้างแล้ว repeat)
+- [ ] `CapsLock + c/v` → copy/paste; `CapsLock + .` → Delete บน layout ไทย
+- [ ] `Shift + CapsLock + l` → เลือกข้อความ
+- [ ] LED CapsLock ไม่ติด
+- [ ] tray → Settings… เปิดหน้าตั้งค่า; กด "กดปุ่ม…" แล้วกดปุ่มจริง → ชื่อปุ่มขึ้น
+- [ ] ＋ เพิ่ม mapping → overlay จับคีย์เด้ง → กดปุ่ม → กด combo → บันทึกแล้วใช้ได้ทันที
+- [ ] แก้ `config.json` ให้พัง → Reload → ยังทำงานด้วยของเดิม + แจ้ง error
+- [ ] ปิดหน้าตั้งค่าแล้ว remap ยังทำงาน; Exit จาก tray แล้วโปรเซสจบ
+
+## งานที่ค้าง
+
+- [ ] หน้า Settings: ช่องค้นหา/filter mapping (ตอนนี้ 23 แถวเลื่อนดูได้)
+- [ ] ตัวเลือก "เปิดพร้อม Windows" (เขียน `HKCU\...\Run`)
+- [ ] พิจารณา per-app profile (ต้องดึงชื่อ process ของหน้าต่าง aktif)

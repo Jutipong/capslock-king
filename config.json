@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "tapTimeoutMs": 0,
+  "remap": {
+    "caps_lock": {
+      "tap": "escape",
+      "hold": {
+        "h": "left",
+        "j": "down",
+        "k": "up",
+        "l": "right",
+
+        "c": "ctrl+c",
+        "v": "ctrl+v",
+        "x": "ctrl+x",
+        "z": "ctrl+z",
+        "y": "ctrl+y",
+
+        "s": "ctrl+s",
+        "a": "ctrl+a",
+        "f": "ctrl+f",
+        "w": "ctrl+w",
+
+        ".": "delete",
+        ",": "backspace",
+
+        "r": "f5",
+        "g": "f9",
+        "d": "f10",
+        "e": "f11",
+        "t": "f12",
+
+        "q": "alt+f4",
+
+        "u": "win+ctrl+left",
+        "i": "win+ctrl+right"
+      }
+    }
+  }
+}

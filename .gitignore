@@ -1,3 +1,19 @@
 # Windows
 Thumbs.db
 Desktop.ini
+
+# .NET
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.suo
+
+# Logs / backups
+capslockking.log
+config.json.bak
+config.json.tmp
+
+# leftover จากสาขา Rust prototype
+/target
