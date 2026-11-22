@@ -10,7 +10,7 @@ public static class Sender
     private const uint KeyeventfKeyUp = 0x0002;
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct KEYBDINPUT
+    internal struct KEYBDINPUT
     {
         public ushort wVk;
         public ushort wScan;
@@ -19,17 +19,56 @@ public static class Sender
         public IntPtr dwExtraInfo;
     }
 
-    [StructLayout(LayoutKind.Explicit)]
-    private struct INPUTUNION
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MOUSEINPUT
     {
-        [FieldOffset(0)] public KEYBDINPUT ki;
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct INPUT
+    internal struct HARDWAREINPUT
+    {
+        public uint uMsg;
+        public ushort wParamL;
+        public ushort wParamH;
+    }
+
+    /// <summary>
+    /// ต้องมีทั้ง mouse/hardware ใน union ไม่งั้น sizeof(INPUT) จะเล็กกว่าที่ Windows คาด
+    /// (x64 = 40 bytes) แล้ว SendInput จะ fail ด้วย ERROR_INVALID_PARAMETER
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    internal struct INPUTUNION
+    {
+        [FieldOffset(0)] public MOUSEINPUT mi;
+        [FieldOffset(0)] public KEYBDINPUT ki;
+        [FieldOffset(0)] public HARDWAREINPUT hi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct INPUT
     {
         public uint type;
         public INPUTUNION u;
+    }
+
+    internal static int InputSize => Marshal.SizeOf<INPUT>();
+
+    /// <summary>ขนาดที่ถูกต้องของ INPUT ตามสถาปัตยกรรม (x64 = 40, x86 = 28)</summary>
+    internal static int ExpectedInputSize => IntPtr.Size == 8 ? 40 : 28;
+
+    static Sender()
+    {
+        if (InputSize != ExpectedInputSize)
+        {
+            throw new InvalidOperationException(
+                $"INPUT struct ผิดขนาด: {InputSize} (ต้องเป็น {ExpectedInputSize}) — SendInput จะไม่ทำงาน");
+        }
     }
 
     [DllImport("user32.dll", SetLastError = true)]
@@ -59,7 +98,11 @@ public static class Sender
             inputs[index++] = MakeInput(stroke.Keys[i], up: true);
         }
 
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        var sent = SendInput((uint)inputs.Length, inputs, InputSize);
+        if (sent != inputs.Length)
+        {
+            Log.Info($"[send] SendInput ส่งได้ {sent}/{inputs.Length} (error {Marshal.GetLastWin32Error()})");
+        }
     }
 
     private static INPUT MakeInput(OutKey key, bool up)

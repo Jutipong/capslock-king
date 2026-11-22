@@ -91,6 +91,7 @@ public sealed class KeyboardHook : IDisposable
                 $"ติดตั้ง keyboard hook ไม่สำเร็จ (error {Marshal.GetLastWin32Error()})");
         }
         IsEnabled = true;
+        Log.Info($"[hook] installed handle=0x{_handle:X}");
     }
 
     public void SetConfig(CompiledConfig config)
@@ -105,6 +106,7 @@ public sealed class KeyboardHook : IDisposable
     public void SetCapture(bool on)
     {
         _capture = on;
+        Log.Info($"[hook] capture={on}");
         if (on)
         {
             Interlocked.Exchange(ref _captured, 0);
@@ -137,18 +139,18 @@ public sealed class KeyboardHook : IDisposable
         }
 
         var info = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
-
-        // กัน recursion จาก SendInput ของเราเอง
-        if ((info.flags & LlkhfInjected) != 0)
-        {
-            return CallNextHookEx(_handle, nCode, wParam, lParam);
-        }
-
         var down = (int)wParam == WmKeyDown || (int)wParam == WmSysKeyDown;
         var scan = (ushort)info.scanCode;
         if ((info.flags & LlkhfExtended) != 0)
         {
             scan |= 0xE000;
+        }
+
+        // กัน recursion จาก SendInput ของเราเอง
+        if ((info.flags & LlkhfInjected) != 0)
+        {
+            Log.Info($"[hook] injected vk=0x{info.vkCode:X2} scan=0x{scan:X4} down={down}");
+            return CallNextHookEx(_handle, nCode, wParam, lParam);
         }
 
         if (_capture)
@@ -170,6 +172,7 @@ public sealed class KeyboardHook : IDisposable
         {
             result = _engine?.OnEvent(info.vkCode, scan, down, Environment.TickCount64) ?? FilterResult.Pass;
         }
+        Log.Info($"[hook] vk=0x{info.vkCode:X2} scan=0x{scan:X4} down={down} capture={_capture} → swallow={result.Swallow} strokes={result.Strokes.Count}");
 
         foreach (var stroke in result.Strokes)
         {
