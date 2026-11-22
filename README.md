@@ -1,90 +1,52 @@
-# 🔥 CapsLock King v2 (C# / WinUI-style WPF)
+# 🔥 OpenKey
 
-> เปลี่ยนปุ่ม CapsLock ให้เป็น **Super Key** สำหรับ Vim-style navigation บน Windows
-> — หน้าจอตั้งค่าสวย ๆ (Fluent theme), mapping เก็บใน `config.json`, ไม่ต้องใช้ AutoHotkey
+> key remapper สำหรับ Windows — **คีย์อะไรก็ได้ + คีย์อะไรก็ได้ → คีย์ที่ต้องการ**
+> หน้าจอตั้งค่าภาษาไทย, mapping เก็บใน `config.json`, ไม่ต้องใช้ AutoHotkey
 
-- **C# / .NET 10 + WPF (WPF-UI Fluent theme)**
-- **Self-contained** — ไม่ต้องติดตั้ง .NET runtime (ผู้ใช้เอาไปแพ็กเป็น installer ได้)
-- **Keyboard hook ระดับ low-level** (`WH_KEYBOARD_LL`) เหมือนเดิม แต่เป็นโค้ดของเราเอง
-- **ไม่พึ่ง layout** — จับด้วย scancode (ตำแหน่งปุ่ม) ใช้กับคีย์บอร์ดไทย/อังกฤษได้เหมือนกัน
+- **C# / .NET 10 + WPF (Fluent theme)**
+- **Self-contained** — ไม่ต้องลง .NET runtime (แพ็กเป็น installer ได้ด้วย `publish\`)
+- keyboard hook ระดับ low-level (`WH_KEYBOARD_LL`) — จับด้วย **scancode** (ตำแหน่งปุ่ม) จึงใช้กับ layout ไทย/อังกฤษได้เหมือนกัน
 
 ```
 publish\
-├─ CapsLockKing.exe   ← ดับเบิลคลิกแล้วใช้ได้ (มี tray icon)
-├─ config.json        ← mapping ทั้งหมด (แก้มือหรือแก้ผ่าน GUI ก็ได้)
+├─ OpenKey.exe     ← ดับเบิลคลิกแล้วใช้ได้ (มี tray icon)
+├─ config.json     ← mapping ทั้งหมด
 └─ ... DLL ของ .NET (self-contained)
 ```
 
 ---
 
-## ✨ คุณสมบัติ
+## ✨ แนวคิด
 
-- **CapsLock เดี่ยว** → `Esc`
-- **Vim navigation** — `h/j/k/l` = ซ้าย/ล่าง/บน/ขวา (กดค้าง = auto-repeat)
-- **Clipboard / ไฟล์ / Function keys** — ครบเหมือนเวอร์ชันเดิม
-- **หน้าตั้งค่า (Settings…)** — เพิ่ม/ลบ/แก้ mapping, **กดปุ่มจริงเพื่อจับคีย์**, ตรวจ config ก่อนบันทึก
-- **Reload ได้ทันที** — ไม่ต้องปิดโปรแกรม (tray → Reload config)
-- **ภาษาไทยในหน้าจอ** — ใช้ฟอนต์ระบบ + font fallback ของ WPF/DirectWrite
+ทุกคีย์ทำได้ 3 อย่าง (จะทำอย่างไหนก็ได้):
 
-## 🎹 Mapping เริ่มต้น
+| บทบาท | ความหมาย | ตัวอย่าง |
+|---|---|---|
+| **trigger** | กดค้างแล้วเปลี่ยนความหมายของคีย์อื่น | `caps_lock + h` → ←, `space + j` → ↓, `; + a` → `ctrl+a` |
+| **tap** | แตะเดี่ยวแล้วได้คีย์นี้ | `space` → space (พิมพ์ปกติ), `caps_lock` → `Escape` |
+| **direct** | map ตรง ๆ ไม่ต้องกดค้าง | `alt` → `win`, `f1` → `ctrl+shift+p` |
 
-| คีย์ | ฟังก์ชัน |
-|------|----------|
-| `CapsLock` (กดเดี่ยว) | `Esc` |
-| `CapsLock + h/j/k/l` | ← / ↓ / ↑ / → |
-| `CapsLock + c/v/x/z/y` | Copy / Paste / Cut / Undo / Redo |
-| `CapsLock + s/a/f/w` | Save / Select All / Find / Close Tab |
-| `CapsLock + .` / `,` | Delete / Backspace |
-| `CapsLock + r/g/d/e/t` | F5 / F9 / F10 / F11 / F12 |
-| `CapsLock + q` | ปิดแอป (`Alt+F4`) |
-| `CapsLock + u` / `i` | สลับ Virtual Desktop ซ้าย / ขวา |
-
-### 🔀 ทริค: กดคู่กับ Shift / Ctrl / Alt
-
-Modifier ที่กดค้างอยู่จะถูกส่งผ่านไปด้วยอัตโนมัติ:
-
-| ทริค | ผลลัพธ์ |
-|------|----------|
-| `CapsLock + Shift + h/j/k/l` | เลือกข้อความ (เหมือน `Shift` + ลูกศร) |
-| `CapsLock + Ctrl + h/l` | กระโดดทีละคำ |
-| `CapsLock + Ctrl + Shift + l` | เลือกข้อความทีละคำ |
-| `CapsLock + Alt + h/l` | ย้อนกลับ / ไปข้างหน้า |
-
----
+CapsLock ไม่ใช่กรณีพิเศษ — เป็นแค่ trigger ตัวหนึ่งใน `config.json` (mapping เริ่มต้นให้มาแบบเดิม)
 
 ## 🚀 วิธีใช้
 
-1. รัน `CapsLockKing.exe` → ไอคอนมงกุฎ 👑 ขึ้นใน system tray
-2. คลิกขวาที่ tray icon:
+1. รัน `OpenKey.exe` → ไอคอนใน system tray
+2. คลิกขวาที่ tray: **Settings…** / Reload config / Open config.json / Open config folder / Exit
+3. ในหน้าตั้งค่า:
+   - **Triggers** (ซ้าย) — เพิ่มด้วยการกดคีย์จริง, เลือกแล้วแก้ตารางทางขวา
+   - **แตะเดี่ยว →** — ตั้ง action เมื่อแตะ trigger เดี่ยว (ปกติ = ตัวมันเอง เพื่อให้พิมพ์ได้)
+   - **ตารางคีย์ลัด** — กดปุ่มซ้าย = กดคีย์จริง, `จับ combo` = กดชุดคีย์, หรือพิมพ์เองก็ได้
+   - **Direct mappings** — map ตรง ๆ ไม่ต้องมี trigger
+   - **tapTimeout** — `0` = แตะแล้วได้ tap ทุกครั้ง / `>0` = ต้องปล่อยภายในเวลานี้ (กันการพิมพ์เร็ว)
+   - **บันทึก & ใช้** — validate, สำรอง `.bak`, เขียนแบบ atomic, reload ทันที
 
-| เมนู | ทำอะไร |
-|------|--------|
-| **Settings…** | เปิดหน้าตั้งค่า (แก้ mapping ด้วย GUI) |
-| **Reload config** | อ่าน `config.json` ใหม่ทันที |
-| **Open config.json** | เปิดไฟล์ด้วย editor ที่ตั้งไว้ |
-| **Open config folder** | เปิดโฟลเดอร์ที่มี exe/config |
-| **Exit** | ปิดโปรแกรม |
-
-> รัน exe ซ้ำขณะโปรแกรมทำงานอยู่ = เปิดหน้าตั้งค่าของตัวที่รันอยู่ (ไม่รันซ้อน)
+> ดับเบิลคลิก exe ขณะโปรแกรมรันอยู่ = เปิดหน้าตั้งค่าของตัวที่รันอยู่
 
 ### ⚙️ เปิดพร้อม Windows
 
-1. `Win + R` → `shell:startup` → Enter
-2. สร้าง shortcut ของ `CapsLockKing.exe` วางในโฟลเดอร์ Startup
+`Win + R` → `shell:startup` → วาง shortcut ของ `OpenKey.exe`
 
-> ถ้าเคยตั้ง Startup ไว้กับเวอร์ชัน AutoHotkey ให้ลบ shortcut เก่าก่อน
-
----
-
-## 🖥️ หน้าตั้งค่า (Settings)
-
-- **การ์ด "ปุ่ม CapsLock"** — กำหนด action เมื่อแตะ CapsLock เดี่ยว + `tapTimeoutMs`
-- **การ์ด "คีย์ลัด"** — ตาราง mapping: กดปุ่มซ้ายเพื่อจับคีย์จริง, พิมพ์ action เองได้, ปุ่ม `จับ combo` สำหรับชุดคีย์
-- ปุ่ม **＋ เพิ่ม mapping** — เพิ่มแถวแล้วเข้าสู่โหมดจับคีย์ทันที (กดปุ่ม → กด combo ต่อ)
-- **บันทึก & ใช้** — validate ก่อน, สำรองของเดิมเป็น `config.json.bak`, เขียนแบบ atomic, reload ทันที
-- **ค่าเริ่มต้น** — เติม mapping มาตรฐานกลับมา (ยังไม่เขียนไฟล์จนกว่าจะกดบันทึก)
-
-หน้าตั้งค่าเป็นเพียง editor ของ `config.json` — ไม่มีค่าที่ซ่อนอยู่ที่อื่น
+> ถ้าเคยตั้ง Startup ไว้กับ AutoHotkey/CapsLock King เวอร์ชันเก่า ให้ลบ shortcut เก่าก่อน
 
 ---
 
@@ -92,45 +54,61 @@ Modifier ที่กดค้างอยู่จะถูกส่งผ่�
 
 ```json
 {
-  "version": 1,
-  "tapTimeoutMs": 0,
-  "remap": {
+  "version": 2,
+  "settings": { "tapTimeoutMs": 0 },
+  "triggers": {
     "caps_lock": {
       "tap": "escape",
-      "hold": {
+      "map": {
         "h": "left",
         "c": "ctrl+c",
-        "u": "win+ctrl+left"
+        "shift+h": "home"
       }
+    },
+    "space": {
+      "tap": "space",
+      "map": { "j": "down", "k": "up" }
     }
-  }
+  },
+  "bindings": [
+    { "from": "alt", "to": "win" },
+    { "from": "ctrl+alt+p", "to": "print_screen" }
+  ]
 }
 ```
 
 | ฟิลด์ | ความหมาย |
 |-------|----------|
-| `version` | ต้องเป็น `1` |
-| `tapTimeoutMs` | `0` = กด CapsLock เดี่ยวแล้วได้ `tap` ทุกครั้ง / เช่น `250` = ต้องปล่อยภายใน 250 ms |
-| `remap.caps_lock.tap` | สิ่งที่ส่งเมื่อแตะ CapsLock เดี่ยว (ไม่ใส่ = ไม่ส่งอะไร) |
-| `remap.caps_lock.hold.<ปุ่ม>` | สิ่งที่ส่งเมื่อ `CapsLock + ปุ่ม` |
+| `settings.tapTimeoutMs` | `0` = แตะแล้วได้ tap ทุกครั้ง / `>0` = ต้องปล่อยภายใน N ms ไม่งั้นถือว่ากดค้าง |
+| `triggers.<คีย์>.tap` | action เมื่อแตะ trigger เดี่ยว (ไม่ใส่ = ไม่ส่งอะไร) |
+| `triggers.<คีย์>.map` | `ปุ่ม (+ modifier)` → `action` เมื่อ trigger ถูกกดค้าง |
+| `bindings[].from` | คีย์ต้นทาง (ใส่ modifier ได้, เป็น modifier เดี่ยวก็ได้) |
+| `bindings[].to` | คีย์/ชุดคีย์ที่จะส่งออก |
 
-**รูปแบบ action**: `<ปุ่ม>` หรือ `ctrl+shift+left` (modifier: `ctrl`, `shift`, `alt`, `win`)
+**รูปแบบค่า**: `<ปุ่ม>` หรือ `modifier+modifier+...+ปุ่ม` (modifier: `ctrl`, `shift`, `alt`, `win`)
+ตัวอย่าง: `left`, `ctrl+c`, `shift+home`, `win+ctrl+right`, `alt`
 
 **ชื่อปุ่ม**: `a`–`z`, `0`–`9`, `escape`, `tab`, `backspace`, `enter`, `space`, `caps_lock`,
 `left/right/up/down`, `home/end/page_up/page_down`, `insert/delete`, `f1`–`f12`,
 `- = [ ] ; ' \` \ , . /`, `print_screen`, `scroll_lock`
 (+ ชื่อพ้อง `esc`, `return`, `control`, `windows`, `pgup`, `pgdn`, `del`, `ins`)
 
-> แก้ผิดแล้ว Reload: โปรแกรมจะ **ไม่ตาย** — ยังใช้ mapping เดิม พร้อมบอกบรรทัด/ชื่อคีย์ที่ผิด
+### กติกาการ match
+
+- `map` ที่ระบุ modifier ชัดเจนกว่า (เช่น `shift+h`) ชนะ `h` เมื่อกด Shift
+- `h` (ไม่ระบุ modifier) ยังทำงานแม้กด modifier อื่นค้าง — modifier ที่ค้างจะติดไปกับคีย์ที่ส่งออกด้วย
+- trigger ซ้อน trigger ได้ (ตัวล่าสุดชนะ) — เช่น `caps_lock` + `space` + `j`
+- คีย์ที่เป็น trigger จะส่ง `tap` ตอน **ปล่อยปุ่ม** (ช้ากว่าปกติไม่กี่ ms)
+- ไฟล์ v1 (CapsLock King เดิม) แปลงเป็น v2 อัตโนมัติเมื่อโหลด
 
 ---
 
 ## 🧪 Debug / log
 
 ```powershell
-.\CapsLockKing.exe --debug                # เขียน log ที่ capslockking.log ข้าง exe
-.\CapsLockKing.exe --config D:\my.json    # ใช้ config คนละไฟล์
-.\CapsLockKing.exe --settings             # เปิดหน้าตั้งค่าทันที
+.\OpenKey.exe --debug                 # เขียน log ที่ openkey.log
+.\OpenKey.exe --config D:\my.json     # ใช้ config คนละไฟล์
+.\OpenKey.exe --settings              # เปิดหน้าตั้งค่าทันที
 ```
 
 ---
@@ -140,10 +118,11 @@ Modifier ที่กดค้างอยู่จะถูกส่งผ่�
 **ปุ่มไม่ทำงานในบางแอป** — แอปที่รันแบบ Administrator จะไม่รับคีย์จากโปรแกรมระดับ user
 (คลิกขวา → **Run as administrator**)
 
-**เกมบางเกมไม่รับคีย์** — ข้อจำกัดของ Windows (raw input / anti-cheat) ไม่ใช่บั๊ก
-และโปรแกรมนี้ไม่รองรับ per-device remap (ต้องใช้ไดรเวอร์ระดับ kernel)
+**เกมบางเกมไม่รับคีย์** — ข้อจำกัดของ Windows (raw input / anti-cheat) และไม่รองรับ per-device remap
 
-**LED CapsLock ไม่ติด** — ตั้งใจ: ปุ่ม CapsLock ถูกกลืนทั้งหมด ต้องการพิมพ์ใหญ่ใช้ `Shift`
+**LED CapsLock** — ถ้าใช้ CapsLock เป็น trigger มันจะถูกกลืนทั้งหมด (ต้องการพิมพ์ใหญ่ใช้ `Shift`)
+
+**ตั้งตัวอักษรเป็น trigger แล้วพิมพ์ช้า** — เพิ่ม `tapTimeout` หรือเลี่ยงใช้ปุ่มที่พิมพ์บ่อยเป็น trigger
 
 ---
 
@@ -152,34 +131,34 @@ Modifier ที่กดค้างอยู่จะถูกส่งผ่�
 ต้องมี .NET 10 SDK (ไม่ต้องมี Visual Studio)
 
 ```powershell
-dotnet test                                        # unit test (43 เคส)
-dotnet build src\CapsLockKing -c Release           # build ปกติ
+dotnet test                                          # unit test
+dotnet build src\OpenKey -c Release                  # build
 powershell -ExecutionPolicy Bypass -File scripts\publish.ps1   # เตรียมไฟล์ให้ installer
 ```
 
-- `scripts\publish.ps1` → `publish\` แบบ self-contained (~160 MB / 255 ไฟล์, ไม่ต้องลง runtime)
-- ใส่ `-SingleFile` ถ้าอยากได้ exe เดี่ยว (แตกไฟล์ตอนรันครั้งแรก, startup ช้าขึ้น)
-- ไอคอนมาจาก `CapsLockKing.ico` (สร้างใหม่ได้ด้วย `tools\generate-icon.ps1`)
+- `scripts\publish.ps1` → `publish\` แบบ self-contained (~160 MB / 255 ไฟล์)
+- `-SingleFile` ถ้าอยากได้ exe เดี่ยว (แตกไฟล์ตอนรันครั้งแรก)
+- ไอคอน: `OpenKey.ico` (สร้างใหม่ได้ด้วย `tools\generate-icon.ps1`)
 
 ## 📁 โครงสร้างโปรเจค
 
 | ไฟล์ | คำอธิบาย |
 |------|----------|
-| `src/CapsLockKing/App.xaml(.cs)` | entry point, single instance, tray, เปิดหน้าตั้งค่า |
-| `src/CapsLockKing/Core/Keys.cs` | ตารางชื่อปุ่ม ↔ scancode/VK |
-| `src/CapsLockKing/Core/ConfigLoader.cs` | อ่าน/validate `config.json` + default ที่ฝังใน exe |
-| `src/CapsLockKing/Core/ConfigWriter.cs` | สร้าง JSON จากหน้าตั้งค่า (atomic save อยู่ที่ MainWindow) |
-| `src/CapsLockKing/Core/HookEngine.cs` | state machine tap/hold/passthrough (pure, มี unit test) |
-| `src/CapsLockKing/Core/KeyboardHook.cs` | `WH_KEYBOARD_LL` + โหมดจับคีย์ |
-| `src/CapsLockKing/Core/Sender.cs` | `SendInput` แบบ batch |
-| `src/CapsLockKing/Views/MainWindow.xaml(.cs)` | หน้าตั้งค่า (Fluent UI) |
-| `tests/CapsLockKing.Tests/` | xUnit tests |
-| `legacy/` | เวอร์ชัน AutoHotkey เดิม (เก็บไว้เป็นทางถอย) |
+| `src/OpenKey/App.xaml(.cs)` | entry, single instance, tray, เปิดหน้าตั้งค่า |
+| `src/OpenKey/Core/Keys.cs` | ตารางชื่อปุ่ม ↔ scancode/VK + ModMask |
+| `src/OpenKey/Core/ConfigLoader.cs` | อ่าน/เขียน/validate config + migration v1→v2 |
+| `src/OpenKey/Core/ConfigModel.cs` | โมเดลที่ compile แล้ว (Trigger/DirectBinding) |
+| `src/OpenKey/Core/HookEngine.cs` | state machine (pure, unit test) |
+| `src/OpenKey/Core/KeyboardHook.cs` | `WH_KEYBOARD_LL` + โหมดจับคีย์ |
+| `src/OpenKey/Core/Sender.cs` | `SendInput` แบบ batch |
+| `src/OpenKey/Views/MainWindow.xaml(.cs)` | หน้าตั้งค่า |
+| `tests/OpenKey.Tests/` | xUnit |
+| `legacy/` | เวอร์ชัน AutoHotkey เดิม (ทางถอย) |
 
 ---
 
 ## 📌 หมายเหตุ
 
-- รองรับ Windows 10/11 (Virtual Desktop ต้อง Windows 10 ขึ้นไป)
-- ถ้าจะทำ installer: เอาโฟลเดอร์ `publish\` ไปแพ็ก (Inno Setup/WiX) — อย่าลืม `config.json`
-- ถ้าเจอบั๊กหรืออยากเพิ่มฟีเจอร์ ส่ง Pull Request หรือเปิด Issue ได้เลย 👑
+- Windows 10/11
+- ถ้าทำ installer: เอาโฟลเดอร์ `publish\` ไปแพ็ก (Inno Setup/WiX) — อย่าลืม `config.json`
+- License: MIT

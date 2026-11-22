@@ -1,14 +1,15 @@
 using System.IO;
 using System.Threading;
 using System.Windows;
-using CapsLockKing.Core;
+using MessageBox = System.Windows.MessageBox;
+using OpenKey.Core;
 
-namespace CapsLockKing;
+namespace OpenKey;
 
 public partial class App : System.Windows.Application
 {
-    private const string MutexName = @"Local\CapsLockKingV2";
-    private const string SignalName = @"Local\CapsLockKingV2.ShowSettings";
+    private const string MutexName = @"Local\OpenKey";
+    private const string SignalName = @"Local\OpenKey.ShowSettings";
 
     private Mutex? _mutex;
     private EventWaitHandle? _signal;
@@ -21,17 +22,17 @@ public partial class App : System.Windows.Application
         var args = e.Args;
         var debug = args.Any(a => a is "--debug" or "-d");
         var baseDir = AppContext.BaseDirectory;
-        Log.Init(debug, Path.Combine(baseDir, "capslockking.log"));
+        Log.Init(debug, Path.Combine(baseDir, "openkey.log"));
 
         if (args.Any(a => a is "--help" or "-h"))
         {
-            System.Windows.MessageBox.Show(
-                "CapsLock King v2\r\n\r\n" +
-                "--debug            เขียน log ที่ capslockking.log\r\n" +
+            MessageBox.Show(
+                "OpenKey — key remapper for Windows\r\n\r\n" +
+                "--debug            เขียน log ที่ openkey.log\r\n" +
                 "--config <path>    ใช้ไฟล์ config อื่น\r\n" +
                 "--settings         เปิดหน้าตั้งค่าทันที\r\n\r\n" +
                 "แก้ mapping ได้จาก tray icon → Settings…",
-                "CapsLock King",
+                "OpenKey",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             Shutdown();
@@ -74,7 +75,7 @@ public partial class App : System.Windows.Application
         catch (Exception ex)
         {
             Log.Info(ex.ToString());
-            System.Windows.MessageBox.Show(ex.Message, "CapsLock King", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, "OpenKey", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
             return;
         }

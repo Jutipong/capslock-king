@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace CapsLockKing.Core;
+namespace OpenKey.Core;
 
 public enum TrayCommand
 {
@@ -31,7 +31,7 @@ public sealed class TrayIcon : IDisposable
         _icon = new NotifyIcon
         {
             Icon = LoadIcon(),
-            Text = "CapsLock King v2",
+            Text = "OpenKey",
             ContextMenuStrip = menu,
             Visible = true,
         };

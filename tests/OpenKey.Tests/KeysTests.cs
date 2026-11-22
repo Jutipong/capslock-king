@@ -1,6 +1,6 @@
-using CapsLockKing.Core;
+using OpenKey.Core;
 
-namespace CapsLockKing.Tests;
+namespace OpenKey.Tests;
 
 public class KeysTests
 {
@@ -49,4 +49,15 @@ public class KeysTests
         Assert.True(KeyTable.Lookup("left")!.Extended);
         Assert.False(KeyTable.Lookup("h")!.Extended);
     }
+
+    [Theory]
+    [InlineData("ctrl", ModMask.Ctrl)]
+    [InlineData("SHIFT", ModMask.Shift)]
+    [InlineData("alt", ModMask.Alt)]
+    [InlineData("win", ModMask.Win)]
+    public void Modifier_mask_mapping(string name, ModMask expected) =>
+        Assert.Equal(expected, KeyTable.ModifierMask(name));
+
+    [Fact]
+    public void Non_modifier_has_no_mask() => Assert.Null(KeyTable.ModifierMask("h"));
 }

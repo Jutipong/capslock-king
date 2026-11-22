@@ -7,14 +7,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>CapsLockKing</AssemblyName>
-    <RootNamespace>CapsLockKing</RootNamespace>
+    <AssemblyName>OpenKey</AssemblyName>
+    <RootNamespace>OpenKey</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>..\..\CapsLockKing.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\OpenKey.ico</ApplicationIcon>
     <Version>2.0.0</Version>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
-    <StartupObject>CapsLockKing.App</StartupObject>
+    <StartupObject>OpenKey.App</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <!-- config.json ตัวเดียวกับที่ repo root — ฝังไว้เป็นค่า default เมื่อไม่มีไฟล์ข้าง exe -->
-    <EmbeddedResource Include="..\..\config.json" LogicalName="CapsLockKing.config.json" />
+    <EmbeddedResource Include="..\..\config.json" LogicalName="OpenKey.config.json" />
     <!-- และคัดลอกไว้ข้าง exe ตอน build/debug เพื่อให้แก้ได้ทันที -->
     <None Include="..\..\config.json" Link="config.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

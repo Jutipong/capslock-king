@@ -1,7 +1,7 @@
 <#
-  generate-icon.ps1 — สร้าง CapsLockKing.ico จากโค้ด (ไม่ต้องใช้ไฟล์ภาพภายนอก)
+  generate-icon.ps1 — สร้าง OpenKey.ico จากโค้ด (ไม่ต้องใช้ไฟล์ภาพภายนอก)
 
-  ดีไซน์: พื้นหลังสี่เหลี่ยมมนสีเข้มไล่เฉด + มงกุฎทอง (CapsLock King)
+  ดีไซน์: พื้นหลังสี่เหลี่ยมมนสีเข้มไล่เฉด + มงกุฎทอง (OpenKey)
   ขนาดที่ฝังในไฟล์: 16 / 32 / 48 / 64 / 128 / 256 px (PNG-compressed ICO)
 
   วิธีใช้:
@@ -16,7 +16,7 @@ param(
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path $PSScriptRoot -Parent
-if (-not $OutFile) { $OutFile = Join-Path $root 'CapsLockKing.ico' }
+if (-not $OutFile) { $OutFile = Join-Path $root 'OpenKey.ico' }
 
 $sizes = 16, 32, 48, 64, 128, 256
 

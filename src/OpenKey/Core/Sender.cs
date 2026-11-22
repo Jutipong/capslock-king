@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace CapsLockKing.Core;
+namespace OpenKey.Core;
 
 /// <summary>ส่งคีย์ออกด้วย SendInput</summary>
 public static class Sender

@@ -1,10 +1,21 @@
-namespace CapsLockKing.Core;
+namespace OpenKey.Core;
 
 /// <summary>ปุ่มหนึ่งปุ่ม: ชื่อ, scancode (set 1) และ virtual-key</summary>
 public sealed record KeyDef(string Name, ushort Scan, ushort Vk)
 {
     /// <summary>ปุ่ม extended (ลูกศร, delete, win ฯลฯ) — ต้องส่ง KEYEVENTF_EXTENDEDKEY</summary>
     public bool Extended => (Scan & 0xE000) == 0xE000;
+}
+
+/// <summary>modifier ที่ต้องกดอยู่ตอน match binding</summary>
+[Flags]
+public enum ModMask
+{
+    None = 0,
+    Ctrl = 1,
+    Shift = 2,
+    Alt = 4,
+    Win = 8,
 }
 
 /// <summary>
@@ -104,6 +115,16 @@ public static class KeyTable
 
     public static bool IsModifier(string name) =>
         Array.IndexOf(Modifiers, Normalize(name)) >= 0;
+
+    /// <summary>แปลงชื่อ modifier เป็น bit (null = ไม่ใช่ modifier)</summary>
+    public static ModMask? ModifierMask(string name) => Normalize(name) switch
+    {
+        "ctrl" => ModMask.Ctrl,
+        "shift" => ModMask.Shift,
+        "alt" => ModMask.Alt,
+        "win" => ModMask.Win,
+        _ => null,
+    };
 
     public static IEnumerable<string> AllNames => Table.Select(k => k.Name);
 }

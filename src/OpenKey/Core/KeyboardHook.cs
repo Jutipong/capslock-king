@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace CapsLockKing.Core;
+namespace OpenKey.Core;
 
 /// <summary>คีย์ที่จับได้ระหว่างโหมด capture ของ GUI</summary>
 public readonly record struct CapturedKey(ushort Scan, bool Ctrl, bool Shift, bool Alt, bool Win)
@@ -13,7 +13,8 @@ public readonly record struct CapturedKey(ushort Scan, bool Ctrl, bool Shift, bo
         if (Shift) parts.Add("shift");
         if (Alt) parts.Add("alt");
         if (Win) parts.Add("win");
-        parts.Add(KeyTable.ByScanCode(Scan)?.Name ?? throw new InvalidOperationException("ปุ่มนี้ยังไม่รองรับ"));
+        parts.Add(KeyTable.ByScanCode(Scan)?.Name
+            ?? throw new InvalidOperationException("ปุ่มนี้ยังไม่รองรับ"));
         return string.Join('+', parts);
     }
 }
@@ -69,8 +70,6 @@ public sealed class KeyboardHook : IDisposable
     private volatile bool _capture;
     private long _captured; // bit63 = valid
 
-    public bool IsEnabled { get; private set; }
-
     public KeyboardHook()
     {
         _proc = HookCallback;
@@ -90,7 +89,6 @@ public sealed class KeyboardHook : IDisposable
             throw new InvalidOperationException(
                 $"ติดตั้ง keyboard hook ไม่สำเร็จ (error {Marshal.GetLastWin32Error()})");
         }
-        IsEnabled = true;
         Log.Info($"[hook] installed handle=0x{_handle:X}");
     }
 
@@ -149,7 +147,6 @@ public sealed class KeyboardHook : IDisposable
         // กัน recursion จาก SendInput ของเราเอง
         if ((info.flags & LlkhfInjected) != 0)
         {
-            Log.Info($"[hook] injected vk=0x{info.vkCode:X2} scan=0x{scan:X4} down={down}");
             return CallNextHookEx(_handle, nCode, wParam, lParam);
         }
 
@@ -170,9 +167,9 @@ public sealed class KeyboardHook : IDisposable
         FilterResult result;
         lock (_gate)
         {
-            result = _engine?.OnEvent(info.vkCode, scan, down, Environment.TickCount64) ?? FilterResult.Pass;
+            result = _engine?.OnEvent(info.vkCode, scan, down, CurrentModifiers(), Environment.TickCount64)
+                ?? FilterResult.Pass;
         }
-        Log.Info($"[hook] vk=0x{info.vkCode:X2} scan=0x{scan:X4} down={down} capture={_capture} → swallow={result.Swallow} strokes={result.Strokes.Count}");
 
         foreach (var stroke in result.Strokes)
         {
@@ -181,6 +178,18 @@ public sealed class KeyboardHook : IDisposable
 
         return result.Swallow ? (IntPtr)1 : CallNextHookEx(_handle, nCode, wParam, lParam);
     }
+
+    private static ModMask CurrentModifiers()
+    {
+        var mods = ModMask.None;
+        if (Held(0xA2) || Held(0xA3)) mods |= ModMask.Ctrl;
+        if (Held(0xA0) || Held(0xA1)) mods |= ModMask.Shift;
+        if (Held(0xA4) || Held(0xA5)) mods |= ModMask.Alt;
+        if (Held(0x5B) || Held(0x5C)) mods |= ModMask.Win;
+        return mods;
+    }
+
+    private static bool Held(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
 
     private static bool IsModifierVk(uint vk) =>
         vk is 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or (>= 0xA0 and <= 0xA5);
@@ -192,17 +201,16 @@ public sealed class KeyboardHook : IDisposable
             return; // รอปุ่มจริง ไม่นับ modifier/CapsLock
         }
 
+        var mods = CurrentModifiers();
         var flags = 0L;
-        if (Held(0xA2) || Held(0xA3)) flags |= 1; // ctrl
-        if (Held(0xA0) || Held(0xA1)) flags |= 2; // shift
-        if (Held(0xA4) || Held(0xA5)) flags |= 4; // alt
-        if (Held(0x5B) || Held(0x5C)) flags |= 8; // win
+        if (mods.HasFlag(ModMask.Ctrl)) flags |= 1;
+        if (mods.HasFlag(ModMask.Shift)) flags |= 2;
+        if (mods.HasFlag(ModMask.Alt)) flags |= 4;
+        if (mods.HasFlag(ModMask.Win)) flags |= 8;
 
         var packed = (1L << 63) | (vk & 0xFFFF) | ((long)scan << 16) | (flags << 32);
         Interlocked.Exchange(ref _captured, packed);
     }
-
-    private static bool Held(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
 
     public void Dispose()
     {
@@ -210,7 +218,6 @@ public sealed class KeyboardHook : IDisposable
         {
             UnhookWindowsHookEx(_handle);
             _handle = IntPtr.Zero;
-            IsEnabled = false;
         }
     }
 }

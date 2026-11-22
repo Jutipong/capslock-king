@@ -1,10 +1,12 @@
 {
-  "version": 1,
-  "tapTimeoutMs": 0,
-  "remap": {
+  "version": 2,
+  "settings": {
+    "tapTimeoutMs": 0
+  },
+  "triggers": {
     "caps_lock": {
       "tap": "escape",
-      "hold": {
+      "map": {
         "h": "left",
         "j": "down",
         "k": "up",
@@ -36,5 +38,6 @@
         "i": "win+ctrl+right"
       }
     }
-  }
+  },
+  "bindings": []
 }

@@ -1,6 +1,6 @@
-using CapsLockKing.Core;
+using OpenKey.Core;
 
-namespace CapsLockKing.Tests;
+namespace OpenKey.Tests;
 
 public class SenderTests
 {

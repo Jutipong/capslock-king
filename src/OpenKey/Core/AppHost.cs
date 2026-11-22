@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
-using System.Windows.Forms;
+using MessageBox = System.Windows.MessageBox;
+using Application = System.Windows.Application;
 
-namespace CapsLockKing.Core;
+namespace OpenKey.Core;
 
 /// <summary>ศูนย์กลางของแอป: config, hook, tray, การเปิดหน้าตั้งค่า</summary>
 public sealed class AppHost : IDisposable
@@ -13,6 +14,7 @@ public sealed class AppHost : IDisposable
     private Views.MainWindow? _window;
 
     public string ConfigPath { get; }
+    public ConfigDocument Document { get; private set; }
     public CompiledConfig Config { get; private set; }
 
     public KeyboardHook Hook => _hook;
@@ -20,39 +22,44 @@ public sealed class AppHost : IDisposable
     public AppHost(string configPath)
     {
         ConfigPath = configPath;
-        Config = ConfigLoader.DefaultConfig();
+        Document = ConfigLoader.DefaultDocument();
+        Config = ConfigLoader.Compile(Document);
     }
 
     public void Start()
     {
-        Config = LoadInitial();
+        Document = LoadInitial();
         ClearCapsLockToggle();
         _hook.Start(Config);
         _tray = new TrayIcon(HandleCommand);
-        Log.Info($"พร้อมใช้งาน — config: {ConfigPath} ({Config.Hold.Count} mapping)");
+        Log.Info($"พร้อมใช้งาน — config: {ConfigPath} ({Config.Triggers.Count} trigger, {Config.Bindings.Count} binding)");
     }
 
-    public CompiledConfig LoadInitial()
+    public ConfigDocument LoadInitial()
     {
         if (!File.Exists(ConfigPath))
         {
             Log.Info($"ไม่พบ {ConfigPath} → ใช้ค่าเริ่มต้นที่ฝังใน exe");
-            return ConfigLoader.DefaultConfig();
+            return ConfigLoader.DefaultDocument();
         }
 
         try
         {
-            return ConfigLoader.Load(ConfigPath);
+            var document = ConfigLoader.Load(ConfigPath);
+            Config = ConfigLoader.Compile(document);
+            return document;
         }
         catch (ConfigException ex)
         {
             Log.Info(ex.Message);
-            System.Windows.MessageBox.Show(
+            MessageBox.Show(
                 $"{ex.Message}\n\nใช้ค่าเริ่มต้นที่ฝังมากับ exe แทน",
-                "CapsLock King — config ผิดพลาด",
+                "OpenKey — config ผิดพลาด",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
-            return ConfigLoader.DefaultConfig();
+            var fallback = ConfigLoader.DefaultDocument();
+            Config = ConfigLoader.Compile(fallback);
+            return fallback;
         }
     }
 
@@ -61,14 +68,17 @@ public sealed class AppHost : IDisposable
     {
         try
         {
-            Config = ConfigLoader.Load(ConfigPath);
-            _hook.SetConfig(Config);
-            Log.Info($"reload สำเร็จ: {Config.Hold.Count} mapping");
+            var document = ConfigLoader.Load(ConfigPath);
+            var compiled = ConfigLoader.Compile(document);
+            Document = document;
+            Config = compiled;
+            _hook.SetConfig(compiled);
+            Log.Info($"reload สำเร็จ: {compiled.Triggers.Count} trigger, {compiled.Bindings.Count} binding");
             if (report)
             {
-                System.Windows.MessageBox.Show(
-                    $"โหลด config ใหม่แล้ว ({Config.Hold.Count} mapping)",
-                    "CapsLock King",
+                MessageBox.Show(
+                    $"โหลด config ใหม่แล้ว ({compiled.Triggers.Count} trigger, {compiled.Bindings.Count} binding)",
+                    "OpenKey",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
@@ -79,9 +89,9 @@ public sealed class AppHost : IDisposable
             Log.Info($"reload ไม่สำเร็จ: {ex.Message}");
             if (report)
             {
-                System.Windows.MessageBox.Show(
+                MessageBox.Show(
                     $"{ex.Message}\n\nยังใช้ mapping เดิมอยู่",
-                    "CapsLock King — config ผิดพลาด",
+                    "OpenKey — config ผิดพลาด",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
@@ -121,7 +131,7 @@ public sealed class AppHost : IDisposable
             case TrayCommand.Exit:
                 Log.Info("exit จาก tray");
                 Dispose();
-                System.Windows.Application.Current.Shutdown();
+                Application.Current.Shutdown();
                 break;
         }
     }
@@ -138,9 +148,9 @@ public sealed class AppHost : IDisposable
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(
+            MessageBox.Show(
                 $"สร้าง {ConfigPath} ไม่ได้: {ex.Message}",
-                "CapsLock King",
+                "OpenKey",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
@@ -154,7 +164,7 @@ public sealed class AppHost : IDisposable
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.Message, "CapsLock King", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, "OpenKey", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

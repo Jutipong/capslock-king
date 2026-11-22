@@ -2,7 +2,7 @@
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\publish.ps1
 #
-# ผลลัพธ์: publish\  (CapsLockKing.exe + DLL + config.json)
+# ผลลัพธ์: publish\  (OpenKey.exe + DLL + config.json)
 # เอาโฟลเดอร์นี้ไปเข้า Inno Setup / WiX / MSIX ต่อได้เลย
 
 param(
@@ -15,7 +15,7 @@ $root = Split-Path $PSScriptRoot -Parent
 Push-Location $root
 try {
     $arguments = @(
-        "publish", "src/CapsLockKing/CapsLockKing.csproj",
+        "publish", "src/OpenKey/OpenKey.csproj",
         "-c", "Release",
         "-r", "win-x64",
         "--self-contained", "true",

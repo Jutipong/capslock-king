@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CapsLockKing\CapsLockKing.csproj" />
+    <ProjectReference Include="..\..\src\OpenKey\OpenKey.csproj" />
   </ItemGroup>
 
   <ItemGroup>

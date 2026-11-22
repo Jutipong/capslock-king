@@ -11,6 +11,7 @@ publish/
 *.suo
 
 # Logs / backups
+openkey.log
 capslockking.log
 config.json.bak
 config.json.tmp
